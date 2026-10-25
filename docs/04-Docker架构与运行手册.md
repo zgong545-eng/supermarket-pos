@@ -65,7 +65,8 @@
 │       ├── conf.d/default.conf 反代规则、SPA 兜底、gzip
 │       └── html/index.html     容器自检状态页
 └── backend/
-    ├── Dockerfile              多阶段构建（maven → jre）
+    ├── Dockerfile              多阶段构建（maven-alpine → jre-alpine）
+    ├── maven-settings.xml      容器内构建走阿里云源（不进运行时镜像）
     ├── .dockerignore
     ├── pom.xml
     └── src/main/
@@ -184,8 +185,57 @@ Kali 的 IP 是 `192.168.19.128`（VMnet8）。宿主机浏览器直接访问 `h
 
 ---
 
-## 9. 已验证 / 未验证
+## 9. 已经踩过的坑（实测记录）
 
-**已验证（在 Kali 上执行过）**：镜像拉取、`docker compose up`、MySQL 初始化脚本、状态页三绿、`--profile full` 全栈构建。
+这三个是真跑起来时撞到的，不是推测。记下来省得六个人各撞一次。
 
-**未验证**：Windows 宿主机直连（本机无 Docker，无法验证）；三个前端接入 gateway 的路径规则（前端还没建）。
+### ① `maven:3.9-eclipse-temurin-17` 拉不下来
+
+jammy 变体约 900MB，国内镜像源拉这个标签会长时间无响应（实测 12 分钟零进展，最后只能中断）。
+
+**换成 alpine 变体**：`maven:3.9-eclipse-temurin-17-alpine` 88 秒下完，最终镜像也从 ~600MB 降到 ~250MB。已经在 Dockerfile 里固化。
+
+### ② alpine 里 `apk add curl` 会失败
+
+`dl-cdn.alpinelinux.org` 在国内经常 TLS 握手失败：
+
+```
+WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz: TLS: unspecified error
+ERROR: unable to select packages: curl (no such package)
+```
+
+**结论：容器里不要装任何包。** 镜像自带的 `wget`（busybox）足够做健康检查，`/usr/share/zoneinfo` 也是完整的，配 `TZ` 和 `-Duser.timezone` 就能拿到中国时区。少一次 `apk`，就少一个构建失败点。
+
+顺带一个：alpine 的 `adduser` 是 busybox 版，家目录参数是 **`-h`** 不是 `-d`，写错直接报 `unrecognized option`。
+
+### ③ `rm -rf` 了被 bind-mount 的目录，容器里看到空目录
+
+改配置后为了干净，执行了 `rm -rf docker/ && tar -x` 重新解压。结果宿主机上 `index.html` 明明在，容器里 `ls` 却是 **空的**，访问首页 403。
+
+原因：容器挂载的是那个目录的 **inode**，目录被删重建后 inode 变了，容器还指着已删除的旧 inode。
+
+**解法**：`docker compose up -d --force-recreate gateway`。
+
+**预防**：同步代码时只覆盖文件，别 `rm -rf` 被挂载的目录（`docker/nginx/html`、`docker/mysql/conf.d` 这几个）。
+
+---
+
+## 10. 验证记录
+
+**已实测通过（Kali，2026-10-25）**：
+
+| 项目 | 结果 |
+|---|---|
+| 镜像拉取 | mysql 113s / redis 36s / nginx 58s / maven-alpine 88s / temurin-jre 149s |
+| 编排语法 | `docker compose config` 通过 |
+| MySQL 初始化 | `pos` + `pos_test` 建库成功，`sys_init_marker` 写入 |
+| MySQL 参数 | utf8mb4 / utf8mb4_0900_ai_ci / +08:00 / lower_case_table_names=1 / 严格模式 |
+| Redis | `PONG`，`aof_enabled:1` |
+| 后端构建 | 依赖下载 91s，编译 10.6s，镜像 `pos/backend:local` |
+| 全栈启动 | 5 个容器全部 healthy |
+| 接口 | `GET /api/health` → `status:UP`，MySQL `8.0.36 / pos`，Redis `PONG` |
+| 状态页 | `GET /` → 200，8.4KB |
+| Adminer | `:8081` → 200 |
+
+**未验证**：Windows 宿主机直连（本机无法安装 Docker）；三个前端接入 gateway 的路径规则（前端还没建）；`full` 形态在答辩机器上的实际表现。
+
