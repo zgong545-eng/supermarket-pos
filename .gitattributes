@@ -1,0 +1,22 @@
+# 统一换行符：仓库内存 LF，六个人机器上不会出现"改了没动却整文件都变了"
+* text=auto eol=lf
+
+# 二进制文件不做换行转换
+*.doc   binary
+*.docx  binary
+*.xls   binary
+*.xlsx  binary
+*.ppt   binary
+*.pptx  binary
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.zip   binary
+*.jar   binary
+
+# Windows 脚本必须保持 CRLF，否则双击跑不起来
+*.bat   text eol=crlf
+*.cmd   text eol=crlf

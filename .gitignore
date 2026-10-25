@@ -1,0 +1,57 @@
+# ===== Java / Maven =====
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# ===== Node / 前端构建产物 =====
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.pnpm-store/
+*.local
+
+# ===== 日志与临时文件 =====
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.tmp_*
+*.tmp
+*.bak
+
+# ===== 编辑器与操作系统 =====
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 敏感配置（绝不入库）=====
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-dev-local.yml
+**/application-secret*.yml
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# ===== 本地产物与流水线中间态 =====
+output/
+/uploads/
+/tmp/
+
+# ===== AI 工具本地状态（组员不需要）=====
+.workbuddy/
