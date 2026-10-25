@@ -9,7 +9,7 @@
 
 | 远端名 | 平台 | 角色 | 说明 |
 |---|---|---|---|
-| `origin` | GitHub（**私有**） | **主库** | 所有开发以此为准，PR、Issue、Actions 都在这里 |
+| `origin` | GitHub（**公开**） | **主库** | 所有开发以此为准，PR、Issue、Actions 都在这里。公开是为了让老师/助教直接看代码与提交记录 |
 | `gitee` | Gitee 码云 | **镜像备份** | 只做单向上推，**不在 Gitee 上开发** |
 
 配置方式（一次搞定，之后 `git push` 会同时推两边）：
@@ -168,7 +168,8 @@ git restore <文件>                # 单个文件放弃修改（慎用）
 
 ## 10. 给组员的第一条消息（可直接转发）
 
-> 仓库地址：`git@github.com:<用户名>/supermarket-pos.git`（私有，需要我把你加成 Collaborator，把 GitHub 用户名发我）
+> 仓库地址：`git@github.com:zgong545-eng/supermarket-pos.git`（公开库，组员点 Fork 或在群里要 Collaborator 权限）
+> 因为公开，**任何口令、`.env`、私钥都不能提交**——`.gitignore` 已经挡掉，提交前仍然要自己看一眼 `git status`
 >
 > 1. 装 Git，然后 `git clone` 上面的地址
 > 2. 如果 clone 卡住不动，看 `docs/03-Git协作约定.md` 第 2 节的 443 端口配置
