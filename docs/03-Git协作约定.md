@@ -64,6 +64,9 @@ Host github.com
 git checkout -b feature/T-B12-stock-lock
 ```
 
+> **`main` 的保护规则必须真的配上，否则上面这张表只是口号。**
+> 具体点击路径见 `05-团队协作接入与生产实践.md` 第 2 节第 ② 步：禁直推、必须 PR、必须 1 个 approve、必须 CI 四项全绿、禁 force push、禁删除分支。
+
 ---
 
 ## 4. 提交信息格式

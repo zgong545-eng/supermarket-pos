@@ -211,6 +211,7 @@ UPDATE inv_stock SET available = available - ?, locked = locked + ?
 | `docs/02-报告书正文-第1至3章.md` | 立项 / 可行性 / 需求分析成稿 |
 | `docs/03-Git协作约定.md` | 分支、提交格式、review、冲突处理 |
 | `docs/04-Docker架构与运行手册.md` | 架构取舍、端口、踩过的七个坑、验证记录 |
+| `docs/05-团队协作接入与生产实践.md` | **组员接入清单** + 真实生产环境的 CI/CD、密钥、可观测性与回滚 |
 | `docs/超市收银管理系统-设计与分工说明.docx` | 给非技术同学看的说明（分工与难度） |
 
 ---

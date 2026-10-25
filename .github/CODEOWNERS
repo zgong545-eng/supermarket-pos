@@ -1,0 +1,56 @@
+# CODEOWNERS —— 哪些文件改动必须找谁看
+#
+# 作用：开 PR 时 GitHub 自动把对应的人加进 Reviewer，不用手动@，也不会漏。
+# 生效前提：仓库 Settings → Branches → main 分支保护里勾上
+#          "Require review from Code Owners"，否则这份文件只是"建议"。
+#
+# ---------------------------------------------------------------
+# 怎么填：把下面 @zgong545-eng 换成组员的 GitHub 用户名即可。
+# 还不知道用户名就先留着组长，等组员把账号发到群里再补。
+#
+#   A  @_____   M01 权限、M13 系统、common 公共层、数据库迁移、编排
+#   B  @_____   M02 商品、M03 库存
+#   C  @_____   M06 订单、M07 支付、M08 收银作业   ← 关键路径，必须看
+#   D  @_____   M04 会员、M05 促销
+#   E  @_____   M10 客户端、M11 POS
+#   F  @_____   M09 报表、M12 管理端
+# ---------------------------------------------------------------
+
+# 默认：任何改动都要过组长这一关（组员用户名补齐后可以删掉这行，
+# 改成逐模块指派，否则组长会成为瓶颈）
+*                               @zgong545-eng
+
+# ============ 红线：改这里等于改全组的契约，必须组长 + 模块负责人双签 ============
+
+# 数据库迁移一旦执行过就不能改，改动波及所有人
+/backend/src/main/resources/db/migration/    @zgong545-eng
+
+# 单号生成、统一响应、异常码、用户上下文：所有模块都依赖
+/backend/src/main/java/com/supermarket/pos/common/   @zgong545-eng
+
+# 鉴权与权限模型
+/backend/src/main/java/com/supermarket/pos/config/   @zgong545-eng
+/backend/src/main/java/com/supermarket/pos/module/system/  @zgong545-eng
+/backend/src/main/java/com/supermarket/pos/module/admin/   @zgong545-eng
+
+# 编排与部署入口
+/docker-compose.yml             @zgong545-eng
+/docker/                        @zgong545-eng
+/.env.example                   @zgong545-eng
+
+# ============ 有设计含量的四处：改动必须写清并发与幂等处理 ============
+
+# 库存三态 + 乐观锁
+/backend/src/main/java/com/supermarket/pos/module/stock/      @zgong545-eng
+# 订单状态机
+/backend/src/main/java/com/supermarket/pos/module/order/      @zgong545-eng
+# 支付回调幂等
+/backend/src/main/java/com/supermarket/pos/module/pay/        @zgong545-eng
+# 促销引擎与按行分摊
+/backend/src/main/java/com/supermarket/pos/module/promotion/  @zgong545-eng
+
+# ============ 协作规则本身的改动，只允许组长改 ============
+
+/.github/                       @zgong545-eng
+/docs/03-Git协作约定.md          @zgong545-eng
+/docs/05-团队协作接入与生产实践.md  @zgong545-eng
