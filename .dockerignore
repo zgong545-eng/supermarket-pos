@@ -1,0 +1,14 @@
+# 构建上下文要越小越好：node_modules 有 2 万多个文件，
+# 传进 Docker 守护进程会让 `--build` 多花好几分钟。
+**/node_modules
+**/dist
+backend/target
+.git
+.idea
+.vscode
+docs
+output
+.workbuddy
+*.md
+!.env.example
+docker-compose.yml

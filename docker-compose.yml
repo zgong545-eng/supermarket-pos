@@ -131,19 +131,20 @@ services:
       - pos-net
 
   # ---------------- 前端网关（仅 full 形态启动） ----------------
-  # 现在只托管一张状态页；三个前端构建出来后挂到这里即可
+  # 一个镜像里含：Vue 打包产物 + nginx 配置 + /api 反代
+  # 访问 http://localhost:8088 就是登录页；/status.html 是运行自检页
   gateway:
     profiles: ["full"]
-    image: nginx:1.27-alpine
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: pos/gateway:local
     container_name: pos-gateway
     restart: unless-stopped
     environment:
       TZ: ${TZ:-Asia/Shanghai}
     ports:
       - "${GATEWAY_PORT:-8088}:80"
-    volumes:
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./docker/nginx/html:/usr/share/nginx/html:ro
     depends_on:
       backend:
         condition: service_healthy

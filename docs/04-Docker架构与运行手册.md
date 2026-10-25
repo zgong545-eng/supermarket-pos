@@ -179,7 +179,7 @@ Kali 的 IP 是 `192.168.19.128`（VMnet8）。宿主机浏览器直接访问 `h
 |---|---|---|---|
 | 1 | 42 张表 DDL + Flyway 接入 | A | `backend/src/main/resources/db/migration/V1__init.sql`，从这里开始有版本记录 |
 | 2 | 公共返回体 `Result<T>` + 全局异常 | A | 所有接口统一外壳，前端只写一次解析 |
-| 3 | 三个前端脚手架 + 各自 Dockerfile | E / F | 挂到 gateway 的 `/`、`/pos/`、`/h5/`，需要给 Vite 配 `base` |
+| 3 | ~~三个前端脚手架 + 各自 Dockerfile~~ | E / F | **已完成**：三个端合并成一个 Vite 工程，靠路由分组；gateway 镜像里直接构建（见第 11 节） |
 | 4 | 演示数据脚本 | F | `demo-base.sql` + `demo-orders.sql`，配 `POST /demo/reset` |
 | 5 | 把 `full` profile 接进答辩流程 | A | 提前一周演练，别当天第一次跑 |
 
@@ -237,5 +237,67 @@ ERROR: unable to select packages: curl (no such package)
 | 状态页 | `GET /` → 200，8.4KB |
 | Adminer | `:8081` → 200 |
 
-**未验证**：Windows 宿主机直连（本机无法安装 Docker）；三个前端接入 gateway 的路径规则（前端还没建）；`full` 形态在答辩机器上的实际表现。
+**未验证**：Windows 宿主机直连（本机无法安装 Docker，本机 Windows 10 LTSC 2019 不支持 Docker Desktop）；答辩机器上的实际表现。
+
+---
+
+## 11. 前端接入（已完成）
+
+### 11.1 为什么三端合成一个工程
+
+一开始计划做三个独立仓库（admin / pos / h5），实际写起来发现问题：
+
+- 三端共用登录逻辑、权限判断、金额格式化、接口封装，拆三份等于维护三套 `api.js`
+- 改一个字段要改三处，六个人分头改必然不同步
+- 三个 `package.json`、三个构建、三个 Dockerfile，部署步骤从 1 条变 3 条
+
+所以合成一个 Vite 工程，用**路由分组 + 三套布局**区分：
+
+```
+/admin/**  → AdminLayout（左侧菜单，Element Plus）
+/pos/**    → PosLayout（全屏收银台，Element Plus）
+/h5/**     → H5Layout（底部 tabbar，Vant，容器宽 430px 居中）
+```
+
+代价是首屏包体变大（Element Plus + Vant 都在里面），用**路由懒加载**抵消：
+顾客打开 H5 只下载 H5 相关的 chunk，不会把管理端的表格代码也拉下来。
+
+### 11.2 网关镜像直接构建前端
+
+`docker/nginx/Dockerfile` 两阶段：
+
+1. `node:22-alpine` 装依赖 + `npm run build`（用 npmmirror 源）
+2. `nginx:1.27-alpine` 把 `dist` 拷进 `/usr/share/nginx/html`，再叠上状态页
+
+所以 `docker compose --profile full up -d --build` 一条命令，
+从源码到"浏览器打开就是登录页"，中间不需要人手动 `npm run build`。
+
+依赖层单独缓存：只改 `.vue` 文件时重建约 20 秒，不会重下 60 个 npm 包。
+
+### 11.3 端口与路径
+
+| 路径 | 内容 |
+|---|---|
+| `/` | Vue 应用（hash 路由，`/#/admin/dashboard` 等） |
+| `/assets/*` | 带 hash 的 js/css，30 天长缓存 |
+| `/api/*` | 反代到 `backend:8080`，同源无 CORS |
+| `/status.html` | 运行自检页（MySQL / Redis 实时探测） |
+| `/healthz` | 健康检查，容器自己用 |
+
+日常开发不用 Docker 起前端：`cd frontend && npm run dev`，
+`vite.config.js` 已把 `/api` 代理到 `localhost:8080`。
+
+### 11.4 三端验证（2026-10-25 实测）
+
+一次端到端脚本跑完 19 个检查点，全部通过：
+
+| 角色 | 链路 | 结果 |
+|---|---|---|
+| 管理员 | 登录（33 个权限点）→ 看板 → 报表 7 天 → 商品/库存/会员/员工/字典/活动/订单 → 库存不变式 `brokenInvariant=0` | ✅ |
+| 收银员 | 开班（备用金 200）→ 算钱 → 下单 → 库存 `可售-2/预占+2` → 现金收款（找零 50）→ 订单 `COMPLETED` → 重复回调被幂等挡掉 → 交班长短款 `0.00` | ✅ |
+| 会员 H5 | 手机号登录（自动开卡）→ 首页（13 分类 / 2 活动）→ 算钱 → 下单 → 支付 → 我的订单 | ✅ |
+
+其中交班那段值得注意：系统应收现金 = 备用金 200 + 现金收入 133.20 = **333.20**，
+实点现金填同一个数，长短款为 0。这个数对得上，说明"现金支付单必须标记 SUCCESS"这条链路是通的
+（曾经漏掉这一步，导致现金在报表和交班里全算成 0，属于查起来很痛苦的 bug）。
 

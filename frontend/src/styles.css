@@ -1,0 +1,105 @@
+/* 全局样式：只放跨端的公共部分，各端自己的样式写在组件里 */
+:root {
+  --pos-primary: #c8102e;      /* 仓储会员店常用的红色，收银台按钮用 */
+  --pos-primary-dark: #9e0c24;
+  --pos-bg: #f5f6f8;
+  --pos-text: #1f2329;
+  --pos-muted: #8b939f;
+  --pos-border: #e5e7eb;
+  --pos-radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: var(--pos-text);
+  background: var(--pos-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 金额统一用等宽数字，对齐好看 ---------- */
+.money {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.money-lg {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--pos-primary);
+}
+
+.muted {
+  color: var(--pos-muted);
+  font-size: 13px;
+}
+
+.page-card {
+  background: #fff;
+  border-radius: var(--pos-radius);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.toolbar .spacer {
+  flex: 1;
+}
+
+/* ---------- H5 容器：手机上全屏，桌面上居中成 430px ---------- */
+.h5-scope {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #fff;
+  position: relative;
+}
+
+/* Vant 的 tabbar 固定定位要跟着容器走 */
+.h5-scope .van-tabbar--fixed {
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 430px;
+}
+
+/* ---------- 打印小票：只留小票区域 ---------- */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+  }
+}
