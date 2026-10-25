@@ -7,23 +7,18 @@
 
 ## 1. 仓库地址与角色
 
-| 远端名 | 平台 | 角色 | 说明 |
-|---|---|---|---|
-| `origin` | GitHub（**公开**） | **主库** | 所有开发以此为准，PR、Issue、Actions 都在这里。公开是为了让老师/助教直接看代码与提交记录 |
-| `gitee` | Gitee 码云 | **镜像备份** | 只做单向上推，**不在 Gitee 上开发** |
+只用一个远端，不做镜像。镜像的唯一价值是"GitHub 挂了还有个备份"，而 GitHub 对六人课程作业几乎不会挂，多维护一个远端反而让组员多一份要配的东西。
 
-配置方式（一次搞定，之后 `git push` 会同时推两边）：
+| 远端名 | 平台 | 说明 |
+|---|---|---|
+| `origin` | GitHub（**公开**） | 唯一的库。所有开发、PR、Issue、Actions 都在这里。公开是为了让老师/助教直接看代码与提交记录 |
 
 ```bash
-git remote add origin git@github.com:<你的用户名>/supermarket-pos.git
-git remote add gitee  git@gitee.com:<你的用户名>/supermarket-pos.git
-
-# 让 origin 一次推到两个地址
-git remote set-url --add --push origin git@github.com:<你的用户名>/supermarket-pos.git
-git remote set-url --add --push origin git@gitee.com:<你的用户名>/supermarket-pos.git
+git remote add origin git@github.com:zgong545-eng/supermarket-pos.git
 ```
 
-> Gitee 的 SSH 走标准 22 端口，它国内直连没问题，不需要特殊配置。
+> 国内连 GitHub 慢或者连不上，看本文第 2 节的 443 端口配置，或者装 Watt Toolkit 加速。
+> 两条路任选一条，不要两条一起上。
 
 ---
 
@@ -171,11 +166,13 @@ git restore <文件>                # 单个文件放弃修改（慎用）
 
 ## 10. 给组员的第一条消息（可直接转发）
 
-> 仓库地址：`git@github.com:zgong545-eng/supermarket-pos.git`（公开库，组员点 Fork 或在群里要 Collaborator 权限）
-> 因为公开，**任何口令、`.env`、私钥都不能提交**——`.gitignore` 已经挡掉，提交前仍然要自己看一眼 `git status`
+> 仓库地址：`https://github.com/zgong545-eng/supermarket-pos`（公开库，用浏览器直接就能看，不需要账号）
 >
-> 1. 装 Git，然后 `git clone` 上面的地址
-> 2. 如果 clone 卡住不动，看 `docs/03-Git协作约定.md` 第 2 节的 443 端口配置
-> 3. 先读 `docs/超市收银管理系统-设计与分工说明.docx`（不懂技术也能看懂），知道自己负责哪块
-> 4. 再读 `docs/00-团队执行手册.md` 里属于你的那部分任务
-> 5. 分支名用 `feature/T-XXnn-简述`，任务号在手册里
+> **不懂技术没关系，先看这份**：群里发的《超市收银管理系统-队友上手版.docx》（组长维护，含截图，不放进公开仓库）
+> 它讲清了「这个项目是什么」「你负责哪块」「怎么在自己电脑上跑起来」「卡住了怎么办」，全程不需要看懂代码。
+>
+> 想动手改代码的，再看 `docs/03-Git协作约定.md`：
+> 1. 装 Git，`git clone` 上面的地址
+> 2. clone 卡住不动 → 看第 2 节的 443 端口配置，或装 Watt Toolkit 加速
+> 3. 分支名用 `feature/T-XXnn-简述`，任务号在 `docs/00-团队执行手册.md`
+> 4. 提交前看一眼 `git status`，**代码里不能有密码、`.env`、私钥**（仓库是公开的，写进去等于发到网上）
