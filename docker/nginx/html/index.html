@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>超市收银管理系统 · 运行状态</title>
+<style>
+  :root{
+    --ink:#1f2328; --ink-soft:#5b636c; --ink-faint:#8b939c;
+    --accent:#14532d; --accent-2:#1a6b3a;
+    --ok:#15803d; --ok-bg:#e7f5ec;
+    --bad:#b42318; --bad-bg:#fdeceb;
+    --wait:#8a4b12; --wait-bg:#fdf3e7;
+    --line:#e3e8e4; --bg:#f6f8f6; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 20px 64px;
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+
+  /* ---- 页头 ---- */
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+         padding-bottom:20px;margin-bottom:24px;border-bottom:2px solid var(--accent);}
+  h1{font-size:23px;margin:0;letter-spacing:.5px;color:var(--accent);font-weight:700;}
+  .sub{font-size:13px;color:var(--ink-faint);margin-top:6px;}
+  .stamp{font-size:12px;color:var(--ink-faint);text-align:right;line-height:1.7;white-space:nowrap;}
+
+  /* ---- 总状态条 ---- */
+  .banner{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:10px;
+          margin-bottom:20px;border:1px solid var(--line);background:var(--card);
+          transition:background .3s,border-color .3s;}
+  .banner.up{background:var(--ok-bg);border-color:#bfe3cb;}
+  .banner.down{background:var(--bad-bg);border-color:#f3c6c2;}
+  .banner.wait{background:var(--wait-bg);border-color:#f2ddc2;}
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--ink-faint);flex:none;
+       box-shadow:0 0 0 4px rgba(0,0,0,.04);}
+  .dot.up{background:var(--ok);}
+  .dot.down{background:var(--bad);}
+  .dot.wait{background:var(--wait);animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .banner .txt{font-size:15px;font-weight:600;}
+  .banner .hint{font-size:12.5px;color:var(--ink-soft);margin-left:auto;font-weight:400;}
+
+  /* ---- 服务卡片 ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+        padding:16px 18px;position:relative;overflow:hidden;}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line);}
+  .card.up::before{background:var(--ok);}
+  .card.down::before{background:var(--bad);}
+  .card.wait::before{background:var(--wait);}
+  .card h2{font-size:14px;margin:0 0 12px;display:flex;align-items:center;gap:8px;
+           color:var(--ink);font-weight:600;letter-spacing:.3px;}
+  .card h2 .badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;
+                  background:#eef1ee;color:var(--ink-soft);margin-left:auto;}
+  .card.up h2 .badge{background:var(--ok-bg);color:var(--ok);}
+  .card.down h2 .badge{background:var(--bad-bg);color:var(--bad);}
+  .card.wait h2 .badge{background:var(--wait-bg);color:var(--wait);}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12.5px;}
+  dt{color:var(--ink-faint);white-space:nowrap;}
+  dd{margin:0;color:var(--ink-soft);word-break:break-all;font-family:ui-monospace,Consolas,monospace;font-size:12px;}
+
+  /* ---- 下一步 ---- */
+  .next{margin-top:26px;background:var(--card);border:1px solid var(--line);
+        border-radius:10px;padding:18px 22px;}
+  .next h3{margin:0 0 12px;font-size:14px;color:var(--accent);font-weight:600;}
+  .next ol{margin:0;padding-left:20px;font-size:13px;color:var(--ink-soft);line-height:2;}
+  .next code{background:#eef1ee;padding:1px 6px;border-radius:4px;
+             font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--accent);}
+  footer{margin-top:28px;text-align:center;font-size:11.5px;color:var(--ink-faint);}
+  .err{color:var(--bad);font-size:11.5px;margin-top:10px;font-family:ui-monospace,monospace;word-break:break-all;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>超市收银管理系统</h1>
+      <div class="sub">容器运行状态 · Docker 骨架自检</div>
+    </div>
+    <div class="stamp">
+      每 5 秒自动刷新<br>
+      <span id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <div class="banner wait" id="banner">
+    <span class="dot wait" id="dot"></span>
+    <span class="txt" id="bannerText">正在连接后端…</span>
+    <span class="hint" id="bannerHint"></span>
+  </div>
+
+  <div class="grid">
+    <div class="card wait" id="card-backend">
+      <h2>后端服务 <span class="badge" id="badge-backend">检测中</span></h2>
+      <dl>
+        <dt>接口</dt><dd>/api/health</dd>
+        <dt>响应</dt><dd id="v-backend-ms">—</dd>
+        <dt>时间</dt><dd id="v-backend-time">—</dd>
+      </dl>
+    </div>
+
+    <div class="card wait" id="card-mysql">
+      <h2>MySQL <span class="badge" id="badge-mysql">检测中</span></h2>
+      <dl>
+        <dt>版本</dt><dd id="v-mysql-detail">—</dd>
+        <dt>耗时</dt><dd id="v-mysql-ms">—</dd>
+      </dl>
+    </div>
+
+    <div class="card wait" id="card-redis">
+      <h2>Redis <span class="badge" id="badge-redis">检测中</span></h2>
+      <dl>
+        <dt>应答</dt><dd id="v-redis-detail">—</dd>
+        <dt>耗时</dt><dd id="v-redis-ms">—</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <div class="next">
+    <h3>接下来做什么</h3>
+    <ol>
+      <li>状态全绿 = 骨架通了，可以开始写业务代码。</li>
+      <li>数据库客户端：<code>http://本机IP:8081</code>（Adminer，用户 <code>pos</code>）</li>
+      <li>后端本地开发时不用重启容器，<code>docker compose up -d</code> 只起中间件即可。</li>
+      <li>要重建全栈：<code>docker compose --profile full up -d --build</code></li>
+    </ol>
+  </div>
+
+  <footer>状态页仅用于自检，不参与业务逻辑</footer>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+
+  function setCard(key, state, badgeText, fields) {
+    const card = $('card-' + key);
+    card.className = 'card ' + state;
+    $('badge-' + key).textContent = badgeText;
+    Object.entries(fields || {}).forEach(([k, v]) => {
+      const el = $('v-' + key + '-' + k);
+      if (el) el.textContent = v;
+    });
+  }
+
+  function tick() {
+    $('clock').textContent = new Date().toLocaleTimeString('zh-CN', {hour12: false});
+  }
+
+  function render(data) {
+    const okAll = data.status === 'UP';
+    const banner = $('banner');
+    banner.className = 'banner ' + (okAll ? 'up' : 'down');
+    $('dot').className = 'dot ' + (okAll ? 'up' : 'down');
+    $('bannerText').textContent = okAll ? '全部正常，骨架已跑通' : '部分服务异常，看下面哪一项是红的';
+    $('bannerHint').textContent = 'MySQL ' + (data.mysql.ms ?? '?') + 'ms · Redis ' + (data.redis.ms ?? '?') + 'ms';
+
+    const bOk = true;
+    setCard('backend', 'up', '运行中', {
+      'ms': (data.app || '') + ' 正常',
+      'time': (data.time || '').replace('T', ' ').slice(0, 19)
+    });
+
+    setCard('mysql', data.mysql.ok ? 'up' : 'down',
+      data.mysql.ok ? '已连接' : '连接失败',
+      {'detail': data.mysql.detail, 'ms': data.mysql.ms + ' ms'});
+
+    setCard('redis', data.redis.ok ? 'up' : 'down',
+      data.redis.ok ? '已连接' : '连接失败',
+      {'detail': data.redis.detail, 'ms': data.redis.ms + ' ms'});
+    $('err').textContent = '';
+  }
+
+  function fail(msg) {
+    const banner = $('banner');
+    banner.className = 'banner down';
+    $('dot').className = 'dot down';
+    $('bannerText').textContent = '后端连不上';
+    $('bannerHint').textContent = '';
+    ['backend', 'mysql', 'redis'].forEach(k => setCard(k, 'down', '未知', {}));
+    $('err').textContent = msg;
+  }
+
+  async function poll() {
+    tick();
+    try {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 4000);
+      const r = await fetch('/api/health', {cache: 'no-store', signal: ctl.signal});
+      clearTimeout(t);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      render(await r.json());
+    } catch (e) {
+      fail(e.name === 'AbortError' ? '请求超时（4 秒无响应）' : String(e.message || e));
+    }
+  }
+
+  poll();
+  setInterval(poll, 5000);
+})();
+</script>
+</body>
+</html>

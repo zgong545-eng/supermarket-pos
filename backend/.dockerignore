@@ -1,0 +1,15 @@
+# 构建上下文里不要的东西
+# 少传 = 构建快。target 里几十兆 class 传进 daemon 毫无意义
+target/
+!target/*.jar
+.idea/
+*.iml
+.vscode/
+.mvn/wrapper/maven-wrapper.jar
+*.log
+logs/
+.git/
+.gitignore
+Dockerfile
+.dockerignore
+README.md
